@@ -1,0 +1,129 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.benchmark</groupId>
+    <artifactId>json-vs-protobuf</artifactId>
+    <version>1.0.0</version>
+
+    <properties>
+        <java.version>17</java.version>
+        <protobuf.version>3.25.3</protobuf.version>
+    </properties>
+
+    <dependencies>
+        <!-- Jackson -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.17.1</version>
+        </dependency>
+
+        <!-- Protobuf -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobuf.version}</version>
+        </dependency>
+    </dependencies>
+
+<profiles>
+
+    <profile>
+        <id>generate-data</id>
+        <properties>
+            <exec.mainClass>com.benchmark.DataGenerator</exec.mainClass>
+        </properties>
+    </profile>
+
+    <profile>
+        <id>run-benchmark</id>
+        <properties>
+            <exec.mainClass>com.benchmark.BenchmarkRunner</exec.mainClass>
+        </properties>
+    </profile>
+    
+    <profile>
+        <id>json-benchmark</id>
+        <properties>
+            <exec.mainClass>com.benchmark.JsonOnlyRunner</exec.mainClass>
+        </properties>
+    </profile>
+
+    <profile>
+        <id>protobuf-benchmark</id>
+        <properties>
+            <exec.mainClass>com.benchmark.ProtobufOnlyRunner</exec.mainClass>
+        </properties>
+    </profile>
+</profiles>
+
+<build>
+    <extensions>
+        <extension>
+            <groupId>kr.motd.maven</groupId>
+            <artifactId>os-maven-plugin</artifactId>
+            <version>1.7.1</version>
+        </extension>
+    </extensions>
+
+    <plugins>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.3.0</version>
+            <configuration>
+                <mainClass>${exec.mainClass}</mainClass>
+            </configuration>
+        </plugin>
+
+        <plugin>
+            <groupId>org.xolstice.maven.plugins</groupId>
+            <artifactId>protobuf-maven-plugin</artifactId>
+            <version>0.6.1</version>
+
+            <configuration>
+                <protocArtifact>
+                    com.google.protobuf:protoc:3.25.3:exe:${os.detected.classifier}
+                </protocArtifact>
+            </configuration>
+
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>compile</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>3.5.1</version>
+
+            <executions>
+                <execution>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>shade</goal>
+                    </goals>
+                    <configuration>
+                        <createDependencyReducedPom>false</createDependencyReducedPom>
+                        <transformers>
+                            <transformer
+                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <mainClass>com.benchmark.BenchmarkRunner</mainClass>
+                            </transformer>
+                        </transformers>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+
+    </plugins>
+</build>
+
+</project>
